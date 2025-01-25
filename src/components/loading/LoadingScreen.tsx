@@ -1,9 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useAnimation } from 'framer-motion'
-import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface LoadingScreenProps {
@@ -153,21 +152,47 @@ const GlitchAvatar = () => {
   )
 }
 
-// Update the MusicPlayer component styling
+// Update the MusicPlayer component
 const MusicPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
-  const totalDuration = 235 // Duration in seconds
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [totalDuration, setTotalDuration] = useState(235)
+
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.play().catch(error => {
+          console.log("Audio playback error:", error)
+        })
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
 
   useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime(prev => (prev + 1) % totalDuration)
-      }, 1000)
+    // Create audio element
+    audioRef.current = new Audio('/audio/neural-beats.wav')
+    
+    // Update duration once audio is loaded
+    audioRef.current.addEventListener('loadedmetadata', () => {
+      setTotalDuration(Math.floor(audioRef.current?.duration || 235))
+    })
+
+    // Update current time
+    audioRef.current.addEventListener('timeupdate', () => {
+      setCurrentTime(Math.floor(audioRef.current?.currentTime || 0))
+    })
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
     }
-    return () => clearInterval(interval)
-  }, [isPlaying, totalDuration])
+  }, [])
 
   return (
     <div className="mt-3 border-t border-cyan-500/20 pt-3">
@@ -216,7 +241,7 @@ const MusicPlayer = () => {
             {formatTime(currentTime)} / {formatTime(totalDuration)}
           </span>
           <button
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={handlePlayPause}
             className="px-3 py-0.5 rounded text-[10px] font-mono text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/10 transition-colors"
           >
             {isPlaying ? 'PAUSE' : 'PLAY'}
@@ -276,20 +301,21 @@ const AnimatedLoadingText = () => {
 export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
-  const totalDuration = 235 // Duration in seconds
+  const [totalDuration, setTotalDuration] = useState(235)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [progress, setProgress] = useState(0)
   const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([
-    { label: 'CPU Load', value: 45, unit: '%', color: 'cyan' },
-    { label: 'Memory', value: 32, unit: '%', color: 'purple' },
-    { label: 'Network', value: 78, unit: 'Mb/s', color: 'emerald' },
-    { label: 'GPU Temp', value: 65, unit: '°C', color: 'rose' },
+    { label: 'CPU Load', value: 42.3, unit: '%', color: 'cyan' },
+    { label: 'Memory', value: 32.4, unit: '%', color: 'purple' },
+    { label: 'Network', value: 83.8, unit: 'Mb/s', color: 'cyan' },
+    { label: 'GPU Temp', value: 71.6, unit: '°C', color: 'purple' },
   ])
-  const [verifications, setVerifications] = useState<CryptoVerification[]>([])
   const [currentVerification, setCurrentVerification] = useState<CryptoVerification>({
     status: 'pending',
-    message: 'Verifying system integrity...',
-    code: 'SYS_0x1A2B'
+    message: 'INITIALIZING SYSTEM',
+    code: 'SYS_0x00'
   })
+  const [verifications, setVerifications] = useState<CryptoVerification[]>([])
   const [glitchEffect, setGlitchEffect] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [prevPoints, setPrevPoints] = useState<Array<{ x: number; y: number }>>([])
@@ -298,6 +324,58 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
   const [raindrops, setRaindrops] = useState<Raindrop[]>(() => 
     Array.from({ length: 333 }, createRaindrop) // Increased to 333 raindrops
   )
+
+  useEffect(() => {
+    // Create audio element
+    audioRef.current = new Audio('/audio/neural-beats.wav')
+    const audio = audioRef.current
+    
+    // Update duration once audio is loaded
+    const handleLoadedMetadata = () => {
+      if (audio) {
+        setTotalDuration(Math.floor(audio.duration))
+        // Auto-play when loaded
+        audio.play().then(() => {
+          setIsPlaying(true)
+        }).catch(error => {
+          console.log("Auto-play failed:", error)
+          // Most browsers require user interaction before playing audio
+          setIsPlaying(false)
+        })
+      }
+    }
+
+    // Update current time while playing
+    const handleTimeUpdate = () => {
+      if (audio) {
+        setCurrentTime(Math.floor(audio.currentTime))
+      }
+    }
+
+    // Add event listeners
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+
+    // Cleanup function
+    return () => {
+      if (audio) {
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+        audio.removeEventListener('timeupdate', handleTimeUpdate)
+        audio.pause()
+      }
+    }
+  }, []) // Empty dependency array - only run once on mount
+
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.play().catch(console.log)
+      }
+      setIsPlaying(!isPlaying)
+    }
+  }
 
   // Updated mouse tracking with velocity
   useEffect(() => {
@@ -381,42 +459,42 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
     return () => clearInterval(interval)
   }, [])
 
-  // Add this new effect after other useEffects
+  // Update the messages array with proper JSON formatting
   useEffect(() => {
     const messages = [
-      { message: 'ANALYZING AUDIO PATTERNS', code: 'AAP_0x01' },
-      { message: 'CALIBRATING RHYTHM ENGINE', code: 'CRE_0x02' },
-      { message: 'LOADING NEURAL BEATS', code: 'LNB_0x03' },
-      { message: 'SYNCHRONIZING BPM MATRIX', code: 'SBM_0x04' },
-      { message: 'HARMONIZING AI CORES', code: 'HAC_0x05' },
-      { message: 'INITIALIZING BEAT DETECTION', code: 'IBD_0x06' },
-      { message: 'PROCESSING FREQUENCY MAPS', code: 'PFM_0x07' },
-      { message: 'OPTIMIZING SOUND WAVES', code: 'OSW_0x08' },
-      { message: 'LOADING SYNTHESIS MODULES', code: 'LSM_0x09' },
-      { message: 'CALIBRATING AUDIO MATRIX', code: 'CAM_0x10' },
-    ]
+      { "message": "ANALYZING AUDIO PATTERNS", "code": "AAP_0x01" },
+      { "message": "CALIBRATING RHYTHM ENGINE", "code": "CRE_0x02" },
+      { "message": "LOADING NEURAL BEATS", "code": "LNB_0x03" },
+      { "message": "SYNCHRONIZING BPM MATRIX", "code": "SBM_0x04" },
+      { "message": "HARMONIZING AI CORES", "code": "HAC_0x05" },
+      { "message": "INITIALIZING BEAT DETECTION", "code": "IBD_0x06" },
+      { "message": "PROCESSING FREQUENCY MAPS", "code": "PFM_0x07" },
+      { "message": "OPTIMIZING SOUND WAVES", "code": "OSW_0x08" },
+      { "message": "LOADING SYNTHESIS MODULES", "code": "LSM_0x09" },
+      { "message": "CALIBRATING AUDIO MATRIX", "code": "CAM_0x10" }
+    ];
 
     const updateVerification = () => {
-      const randomMessage = messages[Math.floor(Math.random() * messages.length)]
-      const willSucceed = Math.random() > 0.3 // 70% success rate
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+      const willSucceed = Math.random() > 0.3; // 70% success rate
 
       setCurrentVerification(prev => ({
-        status: willSucceed ? 'accepted' : 'denied',
+        status: willSucceed ? "accepted" : "denied",
         message: randomMessage.message,
         code: randomMessage.code
-      }))
+      }));
 
       // Add to verification history
       setVerifications(prev => [...prev, {
-        status: willSucceed ? 'accepted' : 'denied',
+        status: willSucceed ? "accepted" : "denied",
         message: randomMessage.message,
         code: randomMessage.code
-      }].slice(-3)) // Keep last 3 verifications
-    }
+      }].slice(-3)); // Keep last 3 verifications
+    };
 
-    const interval = setInterval(updateVerification, 2000)
-    return () => clearInterval(interval)
-  }, [])
+    const interval = setInterval(updateVerification, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <motion.div 
@@ -610,7 +688,7 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
                   {formatTime(currentTime)} / {formatTime(totalDuration)}
                 </span>
                 <button
-                  onClick={() => setIsPlaying(!isPlaying)}
+                  onClick={handlePlayPause}
                   className="px-3 py-0.5 rounded text-[10px] font-mono text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/10 transition-colors"
                 >
                   {isPlaying ? 'PAUSE' : 'PLAY'}
