@@ -65,6 +65,13 @@ const generateRandomMetric = (current: number): number => {
   return Math.min(100, Math.max(0, current + (Math.random() - 0.5) * 10))
 }
 
+// Add new interfaces at the top with existing interfaces
+interface CryptoVerification {
+  status: 'pending' | 'accepted' | 'denied'
+  message: string
+  code: string
+}
+
 export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0)
   const [glitchEffect, setGlitchEffect] = useState(false)
@@ -78,11 +85,19 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
 
   // Add new state for system metrics
   const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([
-    { label: 'Neural Sync', value: 0, unit: '%', color: 'cyan' },
-    { label: 'Quantum Buffer', value: 0, unit: 'qb', color: 'purple' },
-    { label: 'AI Cortex Load', value: 0, unit: '%', color: 'emerald' },
-    { label: 'Memory Flux', value: 0, unit: 'TB/s', color: 'amber' },
+    { label: 'Audio Sync', value: 0, unit: '%', color: 'cyan' },
+    { label: 'Beat Buffer', value: 0, unit: 'hz', color: 'purple' },
+    { label: 'Mix Engine Load', value: 0, unit: '%', color: 'emerald' },
+    { label: 'Sample Flux', value: 0, unit: 'kHz', color: 'amber' },
   ])
+
+  // Add inside the LoadingScreen component with other state
+  const [verifications, setVerifications] = useState<CryptoVerification[]>([])
+  const [currentVerification, setCurrentVerification] = useState<CryptoVerification>({
+    status: 'pending',
+    message: 'INITIALIZING AUDIO PROTOCOLS',
+    code: 'IAP_0x00'
+  })
 
   // Updated mouse tracking with velocity
   useEffect(() => {
@@ -166,6 +181,43 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
     return () => clearInterval(interval)
   }, [])
 
+  // Add this new effect after other useEffects
+  useEffect(() => {
+    const messages = [
+      { message: 'ANALYZING AUDIO PATTERNS', code: 'AAP_0x01' },
+      { message: 'CALIBRATING RHYTHM ENGINE', code: 'CRE_0x02' },
+      { message: 'LOADING NEURAL BEATS', code: 'LNB_0x03' },
+      { message: 'SYNCHRONIZING BPM MATRIX', code: 'SBM_0x04' },
+      { message: 'HARMONIZING AI CORES', code: 'HAC_0x05' },
+      { message: 'INITIALIZING BEAT DETECTION', code: 'IBD_0x06' },
+      { message: 'PROCESSING FREQUENCY MAPS', code: 'PFM_0x07' },
+      { message: 'OPTIMIZING SOUND WAVES', code: 'OSW_0x08' },
+      { message: 'LOADING SYNTHESIS MODULES', code: 'LSM_0x09' },
+      { message: 'CALIBRATING AUDIO MATRIX', code: 'CAM_0x10' },
+    ]
+
+    const updateVerification = () => {
+      const randomMessage = messages[Math.floor(Math.random() * messages.length)]
+      const willSucceed = Math.random() > 0.3 // 70% success rate
+
+      setCurrentVerification(prev => ({
+        status: willSucceed ? 'accepted' : 'denied',
+        message: randomMessage.message,
+        code: randomMessage.code
+      }))
+
+      // Add to verification history
+      setVerifications(prev => [...prev, {
+        status: willSucceed ? 'accepted' : 'denied',
+        message: randomMessage.message,
+        code: randomMessage.code
+      }].slice(-3)) // Keep last 3 verifications
+    }
+
+    const interval = setInterval(updateVerification, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -231,38 +283,85 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
             y: 0,
           }}
           className={cn(
-            "relative w-[600px] h-[600px]", // Updated container size to match logo
+            "relative w-[600px] h-[600px]", // Restored original container size
             "before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-hologram",
             "after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:via-cyan-500/10 after:to-transparent after:animate-hologram-vertical",
             glitchEffect && "animate-glitch"
           )}
         >
-          <motion.div
-            animate={{ 
-              y: [0, -10, 0],
+          <Image
+            src="/images/logo.png"
+            alt="FLIPZ Logo"
+            width={600}
+            height={600}
+            style={{
+              maxWidth: '100%',
+              height: 'auto',
             }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="relative w-full h-full drop-shadow-[0_0_15px_rgba(56,189,248,0.5)]"
-          >
-            <Image
-              src="/images/logo.png"
-              alt="FLIPZ Logo"
-              width={600}  // Changed from 900 to 600
-              height={600} // Changed from 900 to 600
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-              }}
-              className="object-contain relative z-10"
-              priority
-              unoptimized
-            />
-          </motion.div>
+            className="object-contain relative z-10 drop-shadow-[0_0_30px_rgba(56,189,248,0.7)] animate-glow-intense"
+            priority
+            unoptimized
+          />
         </motion.div>
+      </div>
+
+      {/* Cryptographic Verification Section */}
+      <div className="fixed top-[60%] left-1/2 transform -translate-x-1/2 w-full max-w-xl">
+        {/* Current Verification */}
+        <motion.div
+          key={currentVerification.code}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-4"
+        >
+          <div className="inline-flex items-center space-x-2 backdrop-blur-sm bg-black/20 rounded px-4 py-2 border border-cyan-500/20">
+            <motion.div
+              animate={{
+                backgroundColor: currentVerification.status === 'accepted' 
+                  ? ['#059669', '#10B981'] 
+                  : currentVerification.status === 'denied'
+                  ? ['#DC2626', '#EF4444']
+                  : ['#2563EB', '#3B82F6'],
+              }}
+              transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+              className="w-2 h-2 rounded-full"
+            />
+            <span className="font-mono text-sm">
+              {currentVerification.message}
+            </span>
+            <span className="font-mono text-xs text-gray-500">
+              {currentVerification.code}
+            </span>
+          </div>
+        </motion.div>
+
+        {/* Verification History */}
+        <div className="space-y-2">
+          {verifications.map((verification, index) => (
+            <motion.div
+              key={`${verification.code}-${index}`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 0.5 - (index * 0.15), x: 0 }}
+              className="flex justify-center"
+            >
+              <div className="inline-flex items-center space-x-2 backdrop-blur-sm bg-black/10 rounded px-3 py-1">
+                <div 
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    verification.status === 'accepted' 
+                      ? 'bg-emerald-500' 
+                      : 'bg-red-500'
+                  }`}
+                />
+                <span className="font-mono text-xs text-gray-400">
+                  {verification.message}
+                </span>
+                <span className="font-mono text-xs text-gray-600">
+                  {verification.code}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {/* Progress Bar Section - Now with fixed positioning */}
@@ -333,9 +432,9 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
                 animate={{ opacity: [1, 0.5, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              <span className="text-cyan-400">INITIALIZING NEURAL NETWORK</span>
+              <span className="text-cyan-400">INITIALIZING NEURAL AUDIO ENGINE</span>
             </div>
-            <span className="text-gray-500">ID: {Math.random().toString(36).substr(2, 9)}</span>
+            <span className="text-gray-500">FREQ: {(Math.random() * 20000).toFixed(1)} Hz</span>
           </div>
         </div>
       </div>
