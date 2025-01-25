@@ -72,86 +72,224 @@ interface CryptoVerification {
   code: string
 }
 
-// Add this new component above LoadingScreen
+// Add this helper function at the top of the file with your other helper functions
+const formatTime = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+// Update the GlitchAvatar component with more intense glitch effects
 const GlitchAvatar = () => {
   const controls = useAnimation()
 
   useEffect(() => {
     const glitchSequence = async () => {
       while (true) {
+        // More frequent and intense glitch effect
         await controls.start({
           clipPath: [
             'inset(0% 0% 0% 0%)',
-            'inset(10% -5% 90% 0%)',
-            'inset(20% 0% 75% 0%)',
+            'inset(15% -10% 85% 10%)',
+            'inset(35% -15% 65% 15%)',
+            'inset(45% -5% 55% 5%)',
             'inset(0% 0% 0% 0%)',
           ],
-          x: [0, 2, -2, 0],
+          x: [0, -5, 5, -3, 0],
+          y: [0, 3, -3, 2, 0],
           filter: [
-            'hue-rotate(0deg)',
-            'hue-rotate(90deg)',
-            'hue-rotate(180deg)',
-            'hue-rotate(0deg)',
+            'hue-rotate(0deg) brightness(1) contrast(1)',
+            'hue-rotate(90deg) brightness(1.2) contrast(1.5)',
+            'hue-rotate(180deg) brightness(0.8) contrast(2)',
+            'hue-rotate(270deg) brightness(1.4) contrast(1.2)',
+            'hue-rotate(0deg) brightness(1) contrast(1)',
           ],
           transition: {
-            duration: 0.2,
-            times: [0, 0.1, 0.2, 1],
+            duration: 0.3,
+            times: [0, 0.2, 0.4, 0.6, 1],
+            ease: "easeInOut",
           },
         })
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 5000 + 2000))
+        
+        // Add random chromatic aberration effect
+        await controls.start({
+          filter: [
+            'hue-rotate(0deg) blur(0px)',
+            'hue-rotate(90deg) blur(1px)',
+            'hue-rotate(0deg) blur(0px)',
+          ],
+          transition: { duration: 0.2, ease: "easeInOut" }
+        })
+
+        // Shorter delay between glitches
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500))
       }
     }
     glitchSequence()
   }, [controls])
 
   return (
-    <div className="fixed right-0 top-0 h-screen w-1/2 pointer-events-none select-none overflow-hidden">
-      <div className="relative h-full w-full flex items-center justify-end">
-        <motion.div
-          className="relative h-screen w-full"
-          animate={controls}
-        >
-          {/* Base Image */}
-          <Image
-            src="/images/loadingavatar.png"
-            alt="FLIPZ Avatar"
-            fill
-            className="object-contain opacity-40 scale-125 translate-x-24"
-            priority
-            unoptimized
-          />
-          
-          {/* Glitch Layers */}
-          <motion.div
-            className="absolute inset-0"
-            animate={{
-              opacity: [0, 0.15, 0, 0.15, 0],
-              x: [0, 2, -2, 1, 0],
-              y: [0, -2, 1, -1, 0],
-            }}
-            transition={{
-              duration: 0.5,
-              repeat: Infinity,
-              repeatType: "reverse",
-            }}
-          >
-            <Image
-              src="/images/loadingavatar.png"
-              alt=""
-              fill
-              className="object-contain mix-blend-screen opacity-30 scale-125 translate-x-24 blur-[1px]"
-              style={{ filter: 'hue-rotate(90deg)' }}
-              unoptimized
+    <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
+      <motion.div
+        className="relative w-[800px] h-[800px]" // Adjusted size to be more proportional
+        animate={controls}
+        style={{ 
+          mixBlendMode: 'soft-light',
+          opacity: 0.7 // Slightly transparent to blend with background
+        }}
+      >
+        <Image
+          src="/images/loadingavatar.png"
+          alt="Avatar"
+          fill
+          style={{ 
+            objectFit: 'contain',
+            filter: 'brightness(0.8) contrast(1.2)'
+          }}
+          priority
+        />
+      </motion.div>
+    </div>
+  )
+}
+
+// Update the MusicPlayer component styling
+const MusicPlayer = () => {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const totalDuration = 235 // Duration in seconds
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentTime(prev => (prev + 1) % totalDuration)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isPlaying, totalDuration])
+
+  return (
+    <div className="mt-3 border-t border-cyan-500/20 pt-3">
+      <div className="relative">
+        {/* Track Info - More compact */}
+        <div className="flex justify-between items-center mb-2">
+          <div>
+            <div className="text-xs font-mono text-cyan-400">NEURAL BEATS v1.0</div>
+            <div className="text-[10px] font-mono text-gray-500">AUDIO SEQUENCE</div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <motion.div
+              animate={{ opacity: [1, 0.5] }}
+              transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
+              className="w-1.5 h-1.5 rounded-full bg-cyan-500"
             />
-          </motion.div>
-        </motion.div>
+            <span className="text-[10px] font-mono text-gray-400">LIVE</span>
+          </div>
+        </div>
+
+        {/* Waveform - Slightly shorter */}
+        <div className="h-5 mb-2 flex items-center space-x-0.5">
+          {Array.from({ length: 32 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="w-0.5 bg-cyan-500/50"
+              animate={{
+                height: isPlaying ? [
+                  `${Math.random() * 100}%`,
+                  `${Math.random() * 100}%`
+                ] : '20%'
+              }}
+              transition={{
+                duration: 0.4,
+                repeat: Infinity,
+                repeatType: "reverse",
+                delay: i * 0.05
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Controls Row - Compact spacing */}
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-mono text-gray-400">
+            {formatTime(currentTime)} / {formatTime(totalDuration)}
+          </span>
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="px-3 py-0.5 rounded text-[10px] font-mono text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/10 transition-colors"
+          >
+            {isPlaying ? 'PAUSE' : 'PLAY'}
+          </button>
+          <span className="text-[10px] font-mono text-gray-400">
+            {(Math.random() * 160 + 80).toFixed(1)} BPM
+          </span>
+        </div>
       </div>
     </div>
   )
 }
 
+// Add this new component near the top of the file, after the interfaces
+const AnimatedLoadingText = () => {
+  const [text, setText] = useState("CALIBRATING AUDIO MATRIX");
+  const [code, setCode] = useState("CAM_0x10");
+  
+  useEffect(() => {
+    const messages = [
+      { text: "CALIBRATING AUDIO MATRIX", code: "CAM_0x10" },
+      { text: "ANALYZING AUDIO PATTERNS", code: "AAP_0x01" },
+      { text: "ANALYZING AUDIO PATTERNS", code: "AAP_0x02" },
+    ];
+    
+    let currentIndex = 0;
+    
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % messages.length;
+      setText(messages[currentIndex].text);
+      setCode(messages[currentIndex].code);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <div className="flex items-center space-x-3">
+      <motion.div
+        className="w-2 h-2 rounded-full bg-emerald-500"
+        animate={{ opacity: [1, 0.4, 1] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      />
+      <motion.div
+        className="font-mono text-lg"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <span className="text-emerald-500">{text}</span>
+        <span className="ml-3 text-gray-500">{code}</span>
+      </motion.div>
+    </div>
+  );
+};
+
 export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenProps) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const totalDuration = 235 // Duration in seconds
   const [progress, setProgress] = useState(0)
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([
+    { label: 'CPU Load', value: 45, unit: '%', color: 'cyan' },
+    { label: 'Memory', value: 32, unit: '%', color: 'purple' },
+    { label: 'Network', value: 78, unit: 'Mb/s', color: 'emerald' },
+    { label: 'GPU Temp', value: 65, unit: '°C', color: 'rose' },
+  ])
+  const [verifications, setVerifications] = useState<CryptoVerification[]>([])
+  const [currentVerification, setCurrentVerification] = useState<CryptoVerification>({
+    status: 'pending',
+    message: 'Verifying system integrity...',
+    code: 'SYS_0x1A2B'
+  })
   const [glitchEffect, setGlitchEffect] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [prevPoints, setPrevPoints] = useState<Array<{ x: number; y: number }>>([])
@@ -160,22 +298,6 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
   const [raindrops, setRaindrops] = useState<Raindrop[]>(() => 
     Array.from({ length: 333 }, createRaindrop) // Increased to 333 raindrops
   )
-
-  // Add new state for system metrics
-  const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([
-    { label: 'Audio Sync', value: 0, unit: '%', color: 'cyan' },
-    { label: 'Beat Buffer', value: 0, unit: 'hz', color: 'purple' },
-    { label: 'Mix Engine Load', value: 0, unit: '%', color: 'emerald' },
-    { label: 'Sample Flux', value: 0, unit: 'kHz', color: 'amber' },
-  ])
-
-  // Add inside the LoadingScreen component with other state
-  const [verifications, setVerifications] = useState<CryptoVerification[]>([])
-  const [currentVerification, setCurrentVerification] = useState<CryptoVerification>({
-    status: 'pending',
-    message: 'INITIALIZING AUDIO PROTOCOLS',
-    code: 'IAP_0x00'
-  })
 
   // Updated mouse tracking with velocity
   useEffect(() => {
@@ -297,228 +419,223 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
   }, [])
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden",
-        "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_center,_rgba(56,189,248,0.15)_0%,_transparent_70%)]",
-        className
-      )}
+    <motion.div 
+      className={cn("fixed inset-0 bg-black/90 text-white relative", className)}
     >
-      {/* Grid Pattern + Holographic Background */}
-      <div className="absolute inset-0">
-        {/* Enhanced Grid Pattern with Pulse */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(56,189,248,0.15)_1px,transparent_1px),linear-gradient(to_bottom,rgba(56,189,248,0.15)_1px,transparent_1px)] bg-[size:24px_24px] animate-grid-pulse" />
-        
-        {/* Additional Cyber Lines */}
-        <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(124,58,237,0.1)_1px,transparent_1px)] bg-[size:32px_32px] animate-grid-pulse-slow" />
-        
-        {/* Enhanced Holographic Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/10 to-transparent animate-hologram-vertical" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/10 to-transparent animate-hologram" />
-        
-        {/* Enhanced Radial Glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(124,58,237,0.2)_0%,_transparent_70%)] animate-pulse-slow" />
-
-        {/* Cyberpunk Rain Effect */}
-        <div className="absolute inset-0 overflow-hidden">
-          {raindrops.map((drop, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-[1px] bg-gradient-to-b from-cyan-500/40 to-purple-500/40"
-              style={{
-                left: drop.x,
-                top: drop.y,
-                height: drop.length,
-                opacity: drop.opacity,
-                filter: 'blur(0.5px)',
-              }}
-              animate={{
-                opacity: [drop.opacity, drop.opacity * 0.7, drop.opacity],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Enhanced glow overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-purple-500/5" />
+      {/* Full screen glow container */}
+      <div className="fixed inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent" />
+      
+      {/* Avatar positioned behind logo */}
+      <div className="fixed inset-0 flex items-center justify-center">
+        <GlitchAvatar />
       </div>
 
-      {/* Update the logo container */}
-      <div className="fixed top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+      {/* Logo container with enhanced glow */}
+      <div className="fixed inset-0 flex items-center justify-center z-10">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0, y: 10 }}
-          animate={{ 
-            scale: 1, 
-            opacity: 1, 
-            y: 0,
-          }}
-          className={cn(
-            "relative w-[600px] h-[600px]", // Restored original container size
-            "before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:animate-hologram",
-            "after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:via-cyan-500/10 after:to-transparent after:animate-hologram-vertical",
-            glitchEffect && "animate-glitch"
-          )}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative"
         >
           <Image
             src="/images/logo.png"
             alt="FLIPZ Logo"
-            width={600}
-            height={600}
-            style={{
-              maxWidth: '100%',
-              height: 'auto',
-            }}
-            className="object-contain relative z-10 drop-shadow-[0_0_30px_rgba(56,189,248,0.7)] animate-glow-intense"
+            width={480}
+            height={120}
+            className="drop-shadow-[0_0_50px_rgba(56,189,248,0.9)] animate-glow-intense"
             priority
             unoptimized
           />
         </motion.div>
       </div>
 
-      {/* Cryptographic Verification Section */}
-      <div className="fixed top-[60%] left-1/2 transform -translate-x-1/2 w-full max-w-xl">
-        {/* Current Verification */}
-        <motion.div
-          key={currentVerification.code}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-4"
-        >
-          <div className="inline-flex items-center space-x-2 backdrop-blur-sm bg-black/20 rounded px-4 py-2 border border-cyan-500/20">
-            <motion.div
-              animate={{
-                backgroundColor: currentVerification.status === 'accepted' 
-                  ? ['#059669', '#10B981'] 
-                  : currentVerification.status === 'denied'
-                  ? ['#DC2626', '#EF4444']
-                  : ['#2563EB', '#3B82F6'],
-              }}
-              transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
-              className="w-2 h-2 rounded-full"
-            />
-            <span className="font-mono text-sm">
-              {currentVerification.message}
-            </span>
-            <span className="font-mono text-xs text-gray-500">
-              {currentVerification.code}
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Verification History */}
-        <div className="space-y-2">
-          {verifications.map((verification, index) => (
-            <motion.div
-              key={`${verification.code}-${index}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 0.5 - (index * 0.15), x: 0 }}
-              className="flex justify-center"
-            >
-              <div className="inline-flex items-center space-x-2 backdrop-blur-sm bg-black/10 rounded px-3 py-1">
-                <div 
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    verification.status === 'accepted' 
-                      ? 'bg-emerald-500' 
-                      : 'bg-red-500'
-                  }`}
-                />
-                <span className="font-mono text-xs text-gray-400">
-                  {verification.message}
-                </span>
-                <span className="font-mono text-xs text-gray-600">
-                  {verification.code}
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Progress Bar Section - Now with fixed positioning */}
-      <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4 z-50">
-        <div className="relative backdrop-blur-sm bg-black/20 rounded-lg p-4 border border-cyan-500/20">
-          {/* Main Progress Bar */}
-          <div className="relative mb-6">
-            <div className="flex justify-between mb-2">
-              <span className="text-xs font-mono text-cyan-400">System Initialize</span>
-              <span className="text-xs font-mono text-cyan-400">{Math.round(progress)}%</span>
-            </div>
-            <div className="h-2 bg-gray-800/50 rounded-full overflow-hidden">
+      {/* Rest of your UI components */}
+      <div className="relative z-20">
+        {/* Cryptographic Verification Section */}
+        <div className="fixed top-[60%] left-1/2 transform -translate-x-1/2 w-full max-w-xl">
+          {/* Current Verification */}
+          <motion.div
+            key={currentVerification.code}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-4"
+          >
+            <div className="inline-flex items-center space-x-2 backdrop-blur-sm bg-black/20 rounded px-4 py-2 border border-cyan-500/20">
               <motion.div
-                className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500"
-                style={{
-                  width: `${progress}%`,
-                  backgroundSize: '200% 100%',
-                }}
                 animate={{
-                  backgroundPosition: ['0% 50%', '100% 50%'],
+                  backgroundColor: currentVerification.status === 'accepted' 
+                    ? ['#059669', '#10B981'] 
+                    : currentVerification.status === 'denied'
+                    ? ['#DC2626', '#EF4444']
+                    : ['#2563EB', '#3B82F6'],
                 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+                className="w-2 h-2 rounded-full"
               />
+              <span className="font-mono text-sm">
+                {currentVerification.message}
+              </span>
+              <span className="font-mono text-xs text-gray-500">
+                {currentVerification.code}
+              </span>
             </div>
-            
-            {/* Decorative Elements */}
-            <div className="absolute -left-2 -top-2 w-4 h-4 border-l-2 border-t-2 border-cyan-500/30" />
-            <div className="absolute -right-2 -bottom-2 w-4 h-4 border-r-2 border-b-2 border-cyan-500/30" />
-          </div>
+          </motion.div>
 
-          {/* System Metrics Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {systemMetrics.map((metric, index) => (
-              <div key={metric.label} className="relative">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-mono text-gray-400">{metric.label}</span>
-                  <span className="text-xs font-mono text-gray-400">
-                    {metric.value.toFixed(1)}{metric.unit}
+          {/* Verification History */}
+          <div className="space-y-2">
+            {verifications.map((verification, index) => (
+              <motion.div
+                key={`${verification.code}-${index}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 0.5 - (index * 0.15), x: 0 }}
+                className="flex justify-center"
+              >
+                <div className="inline-flex items-center space-x-2 backdrop-blur-sm bg-black/10 rounded px-3 py-1">
+                  <div 
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      verification.status === 'accepted' 
+                        ? 'bg-emerald-500' 
+                        : 'bg-red-500'
+                    }`}
+                  />
+                  <span className="font-mono text-xs text-gray-400">
+                    {verification.message}
+                  </span>
+                  <span className="font-mono text-xs text-gray-600">
+                    {verification.code}
                   </span>
                 </div>
-                <div className="h-1 bg-gray-800/50 rounded-full overflow-hidden">
-                  <motion.div
-                    className={`h-full bg-${metric.color}-500`}
-                    style={{ width: `${metric.value}%` }}
-                    animate={{
-                      opacity: [0.5, 1, 0.5],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: index * 0.2,
-                    }}
-                  />
-                </div>
-              </div>
+              </motion.div>
             ))}
           </div>
+        </div>
 
-          {/* Status Messages */}
-          <div className="mt-4 flex justify-between items-center text-xs font-mono">
-            <div className="flex items-center space-x-2">
-              <motion.div
-                className="w-2 h-2 rounded-full bg-cyan-500"
-                animate={{ opacity: [1, 0.5, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <span className="text-cyan-400">INITIALIZING NEURAL AUDIO ENGINE</span>
+        {/* Progress Bar Section - Now with fixed positioning */}
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 w-[800px]">
+          <div className="relative backdrop-blur-sm bg-black/20 rounded-lg p-4 border border-cyan-500/20">
+            {/* Main Progress Bar and Metrics in a row */}
+            <div className="flex gap-6">
+              {/* Left column - Progress */}
+              <div className="flex-1">
+                <div className="relative mb-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-xs font-mono text-cyan-400">System Initialize</span>
+                    <span className="text-xs font-mono text-cyan-400">{Math.round(progress)}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-800/50 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500"
+                      style={{
+                        width: `${progress}%`,
+                        backgroundSize: '200% 100%',
+                      }}
+                      animate={{
+                        backgroundPosition: ['0% 50%', '100% 50%'],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right column - Metrics */}
+              <div className="flex-1">
+                <div className="grid grid-cols-2 gap-3">
+                  {systemMetrics.map((metric, index) => (
+                    <div key={metric.label} className="relative">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-mono text-gray-400">{metric.label}</span>
+                        <span className="text-xs font-mono text-gray-400">
+                          {metric.value.toFixed(1)}{metric.unit}
+                        </span>
+                      </div>
+                      <div className="h-1 bg-gray-800/50 rounded-full overflow-hidden">
+                        <motion.div
+                          className={`h-full bg-${metric.color}-500`}
+                          style={{ width: `${metric.value}%` }}
+                          animate={{
+                            opacity: [0.5, 1, 0.5],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            delay: index * 0.2,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <span className="text-gray-500">FREQ: {(Math.random() * 20000).toFixed(1)} Hz</span>
+
+            {/* Divider */}
+            <div className="my-4 border-t border-cyan-500/20"></div>
+
+            {/* Music Player - Now in a row layout */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div>
+                  <div className="text-xs font-mono text-cyan-400">NEURAL BEATS v1.0</div>
+                  <div className="text-[10px] font-mono text-gray-500">AUDIO SEQUENCE</div>
+                </div>
+                <div className="h-5 w-64 flex items-center space-x-0.5">
+                  {Array.from({ length: 32 }).map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="w-0.5 bg-cyan-500/50"
+                      animate={{
+                        height: [
+                          `${Math.random() * 100}%`,
+                          `${Math.random() * 100}%`
+                        ]
+                      }}
+                      transition={{
+                        duration: 0.4,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                        delay: i * 0.05
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <span className="text-[10px] font-mono text-gray-400">
+                  {formatTime(currentTime)} / {formatTime(totalDuration)}
+                </span>
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="px-3 py-0.5 rounded text-[10px] font-mono text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/10 transition-colors"
+                >
+                  {isPlaying ? 'PAUSE' : 'PLAY'}
+                </button>
+                <span className="text-[10px] font-mono text-gray-400">
+                  {(Math.random() * 160 + 80).toFixed(1)} BPM
+                </span>
+              </div>
+            </div>
+
+            {/* Status Messages */}
+            <div className="mt-4 flex justify-between items-center text-xs font-mono">
+              <div className="flex items-center space-x-2">
+                <motion.div
+                  className="w-2 h-2 rounded-full bg-cyan-500"
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                <span className="text-cyan-400">INITIALIZING NEURAL AUDIO ENGINE</span>
+              </div>
+              <span className="text-gray-500">FREQ: {(Math.random() * 20000).toFixed(1)} Hz</span>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Glitch Avatar */}
-      <GlitchAvatar />
     </motion.div>
   )
 } 
