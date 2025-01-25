@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useAnimation } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -70,6 +70,84 @@ interface CryptoVerification {
   status: 'pending' | 'accepted' | 'denied'
   message: string
   code: string
+}
+
+// Add this new component above LoadingScreen
+const GlitchAvatar = () => {
+  const controls = useAnimation()
+
+  useEffect(() => {
+    const glitchSequence = async () => {
+      while (true) {
+        await controls.start({
+          clipPath: [
+            'inset(0% 0% 0% 0%)',
+            'inset(10% -5% 90% 0%)',
+            'inset(20% 0% 75% 0%)',
+            'inset(0% 0% 0% 0%)',
+          ],
+          x: [0, 2, -2, 0],
+          filter: [
+            'hue-rotate(0deg)',
+            'hue-rotate(90deg)',
+            'hue-rotate(180deg)',
+            'hue-rotate(0deg)',
+          ],
+          transition: {
+            duration: 0.2,
+            times: [0, 0.1, 0.2, 1],
+          },
+        })
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 5000 + 2000))
+      }
+    }
+    glitchSequence()
+  }, [controls])
+
+  return (
+    <div className="fixed right-0 top-0 h-screen w-1/2 pointer-events-none select-none overflow-hidden">
+      <div className="relative h-full w-full flex items-center justify-end">
+        <motion.div
+          className="relative h-screen w-full"
+          animate={controls}
+        >
+          {/* Base Image */}
+          <Image
+            src="/images/loadingavatar.png"
+            alt="FLIPZ Avatar"
+            fill
+            className="object-contain opacity-40 scale-125 translate-x-24"
+            priority
+            unoptimized
+          />
+          
+          {/* Glitch Layers */}
+          <motion.div
+            className="absolute inset-0"
+            animate={{
+              opacity: [0, 0.15, 0, 0.15, 0],
+              x: [0, 2, -2, 1, 0],
+              y: [0, -2, 1, -1, 0],
+            }}
+            transition={{
+              duration: 0.5,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          >
+            <Image
+              src="/images/loadingavatar.png"
+              alt=""
+              fill
+              className="object-contain mix-blend-screen opacity-30 scale-125 translate-x-24 blur-[1px]"
+              style={{ filter: 'hue-rotate(90deg)' }}
+              unoptimized
+            />
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
 }
 
 export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenProps) {
@@ -438,6 +516,9 @@ export function LoadingScreen({ onLoadingComplete, className }: LoadingScreenPro
           </div>
         </div>
       </div>
+
+      {/* Glitch Avatar */}
+      <GlitchAvatar />
     </motion.div>
   )
 } 

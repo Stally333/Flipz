@@ -19,6 +19,8 @@ module.exports = {
         'glow': 'glow 2s ease-in-out infinite alternate',
         'glow-intense': 'glow-intense 3s ease-in-out infinite alternate',
         'glow-pulse': 'glow-pulse 4s ease-in-out infinite',
+        'glitch-slide': 'glitch-slide 2s ease-in-out infinite',
+        'glitch-opacity': 'glitch-opacity 3s ease-in-out infinite',
       },
       keyframes: {
         'gradient-x': {
@@ -119,6 +121,24 @@ module.exports = {
           '50%': {
             opacity: 0.6,
             transform: 'scale(1.05)',
+          },
+        },
+        'glitch-slide': {
+          '0%, 100%': {
+            transform: 'translateX(0)',
+            opacity: 0.3,
+          },
+          '50%': {
+            transform: 'translateX(2px)',
+            opacity: 0.5,
+          },
+        },
+        'glitch-opacity': {
+          '0%, 100%': {
+            opacity: 0.2,
+          },
+          '50%': {
+            opacity: 0.4,
           },
         },
       },
